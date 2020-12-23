@@ -1,0 +1,11 @@
+files <- c("GSM1545535_10_6_5_11.txt", 
+           "GSM1545536_9_6_5_11.txt", 
+           "GSM1545538_purep53.txt", 
+           "GSM1545539_JMS8-2.txt", 
+           "GSM1545540_JMS8-3.txt", 
+           "GSM1545541_JMS8-4.txt", 
+           "GSM1545542_JMS8-5.txt", 
+           "GSM1545544_JMS9-P7c.txt", 
+           "GSM1545545_JMS9-P8c.txt")
+path=paste0("./data/",files[1])
+read.delim(path, nrow=5)
