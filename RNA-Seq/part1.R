@@ -2,6 +2,7 @@
 
 library(limma)
 library(edgeR)
+library(dplyr)
 
 #file path
 files <- c("GSM1545535_10_6_5_11.txt", 
@@ -53,3 +54,52 @@ lcpm <- cpm(x,log=TRUE)
 keep.exprs <- filterByExpr(x) #output table with boolean val for eahc gene, threshold: CPM = 10/ave.lib.size
 x <- x[keep.exprs,, keep.lib.sizes=FALSE]
 
+#normalization factors of each sample
+x <- calcNormFactors(x, method = "TMM")
+
+#limma package
+#MDS plot
+plotMDS(lcpm)
+
+#creating a design matrix and contrast (from x$samples df info)
+design <- model.matrix(~0+x$samples$group+x$samples$lane)
+colnames(design) <- gsub("x\\$samples\\$group", "", colnames(design))
+colnames(design) <- gsub("x\\$samples\\$lane", "", colnames(design))
+#design
+
+#set up contrast w limma
+contr.matrix <- makeContrasts(
+  BasalvsLP = Basal-LP,
+  BasalvsML = Basal - ML,
+  LPvsML = LP - ML,
+  levels = colnames(design))
+contr.matrix
+
+#voom method
+v <- voom(x, design, plot=TRUE)
+View(v$targets)
+#v$genes = x$genes, v$targets=x$samples
+
+#fit a model to expression value of each gene
+vfit <- lmFit(v, design)
+vfit <- contrasts.fit(vfit, contrasts=contr.matrix) 
+
+#take info across all genes -> more precise estimates of gene-wise variablity
+efit <- eBayes(vfit)
+plotSA(efit)
+
+summary(decideTests(efit))
+
+#treat takes into account min log-FC
+tfit <- treat(vfit, lfc=1) 
+dt <- decideTests(tfit) 
+#summary(dt)
+#View(dt@.Data)
+#0=notDE,1=upregulated,-1=down-regulated
+de.common <- which(dt[,1]!=0 & dt[,2]!=0)
+length(de.common)
+
+#examine top DE genes
+basal.vs.lp <- topTreat(tfit, coef=1, n=Inf) 
+basal.vs.ml <- topTreat(tfit, coef=2, n=Inf) 
+head(basal.vs.lp)
