@@ -103,3 +103,5 @@ length(de.common)
 basal.vs.lp <- topTreat(tfit, coef=1, n=Inf) 
 basal.vs.ml <- topTreat(tfit, coef=2, n=Inf) 
 head(basal.vs.lp)
+
+plotMD(tfit, column=1, status=dt[,1], main=colnames(tfit)[1], xlim=c(-8,13))
